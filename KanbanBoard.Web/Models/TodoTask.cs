@@ -18,7 +18,7 @@ namespace KanbanBoard.Web.Models
 
             [DataType(DataType.Date)]
             public DateTime? DueDate { get; set; }
-            //public string Priority { get; set; } = "Medium";
+            public string Priority { get; set; } = "Medium";
     }
 }
 

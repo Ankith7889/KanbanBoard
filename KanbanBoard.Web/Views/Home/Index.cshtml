@@ -7,7 +7,8 @@
         <tr>
             <th>Title</th>
             <th>Status</th>
-            <th>Due</th>
+			<th>Priority</th>
+            <th>Due Date</th>
         </tr>
     </thead>
     <tbody>
@@ -16,11 +17,16 @@
             <tr>
                 <td>@t.Title</td>
                 <td>@t.Status</td>
+				<td>@t.Priority</td>
                 <td>@(t.DueDate?.ToString("yyyy-MM-dd") ?? "-")</td>
+				<td>
+					<a asp-controller="Task" asp-action="Edit" asp-route-id="@t.Id" class="btn btn-primary">Edit</a>
+					<a asp-controller="Task" asp-action="Delete" asp-route-id="@t.Id" class="btn btn-danger">Delete</a>
             </tr>
         }
     </tbody>
 </table>
 <p>
     <a asp-controller="Task" asp-action="Create" class="btn btn-success">Create New Task</a>
+    <a asp-controller="Task" asp-action="Edit" class="btn btn-success">Edit Task</a>
 </p>
