@@ -14,8 +14,9 @@ namespace KanbanBoard.Web.Controllers
             _db = db;
         }
 
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            ViewBag.Categories = await _db.Categories.ToListAsync();
             return View();
         }
 

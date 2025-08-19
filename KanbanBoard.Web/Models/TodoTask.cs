@@ -6,19 +6,23 @@ namespace KanbanBoard.Web.Models
 
     public class TodoTask
     {
-            public int Id { get; set; }
-            [Required]
-            public string Title { get; set; } = string.Empty;
+        [Key]
+        public int Id { get; set; }
+        [Required]
+        public string Title { get; set; } = string.Empty;
 
-            public string? Description { get; set; }
+        public string? Description { get; set; }
 
-            public TodoTaskStatus Status { get; set; } = TodoTaskStatus.ToDo;
+        public TodoTaskStatus Status { get; set; } = TodoTaskStatus.ToDo;
 
-            public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-            [DataType(DataType.Date)]
-            public DateTime? DueDate { get; set; }
-            public string Priority { get; set; } = "Medium";
+        [DataType(DataType.Date)]
+        public DateTime? DueDate { get; set; }
+        public string Priority { get; set; } = "Medium";
+        public int CategoryId { get; set; }   
+        public Category Category { get; set; } 
+
     }
 }
 
