@@ -15,8 +15,9 @@ namespace KanbanBoard.Web.Controllers
         public async Task<IActionResult> Index()
         {
             var tasks = await _dbContext.Tasks
-                                 .OrderBy(t => t.Status)
-                                 .ToListAsync();
+                .Include(t => t.Category)  
+                .OrderBy(t => t.Status)
+                .ToListAsync();
             return View(tasks);
         }
     }

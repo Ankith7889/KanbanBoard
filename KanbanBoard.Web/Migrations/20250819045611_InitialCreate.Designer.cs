@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace KanbanBoard.Web.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250818082855_AddCategoryTable")]
-    partial class AddCategoryTable
+    [Migration("20250819045611_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -41,6 +41,23 @@ namespace KanbanBoard.Web.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Categories");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Work"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Personal"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "Shopping"
+                        });
                 });
 
             modelBuilder.Entity("KanbanBoard.Web.Models.TodoTask", b =>
@@ -79,6 +96,35 @@ namespace KanbanBoard.Web.Migrations
                     b.HasIndex("CategoryId");
 
                     b.ToTable("Tasks");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CategoryId = 1,
+                            CreatedAt = new DateTime(2025, 8, 19, 4, 56, 11, 167, DateTimeKind.Utc).AddTicks(7727),
+                            Priority = "Medium",
+                            Status = 0,
+                            Title = "Build Kanban Board"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CategoryId = 3,
+                            CreatedAt = new DateTime(2025, 8, 19, 4, 56, 11, 167, DateTimeKind.Utc).AddTicks(7729),
+                            Priority = "Medium",
+                            Status = 1,
+                            Title = "Buy Groceries"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CategoryId = 2,
+                            CreatedAt = new DateTime(2025, 8, 19, 4, 56, 11, 167, DateTimeKind.Utc).AddTicks(7730),
+                            Priority = "Medium",
+                            Status = 2,
+                            Title = "Call Mom"
+                        });
                 });
 
             modelBuilder.Entity("KanbanBoard.Web.Models.TodoTask", b =>

@@ -1,37 +1,47 @@
 ﻿@model KanbanBoard.Web.Models.TodoTask
+@using KanbanBoard.Web.Models
 
 <h2>Create Task</h2>
-
 <form asp-action="Create" method="post">
     @Html.AntiForgeryToken()
-
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <div class="form-group">
         <label asp-for="Title"></label>
         <input asp-for="Title" class="form-control" />
         <span asp-validation-for="Title" class="text-danger"></span>
     </div>
-
     <div class="form-group">
         <label asp-for="Description"></label>
         <textarea asp-for="Description" class="form-control"></textarea>
     </div>
-
     <div class="form-group">
         <label asp-for="Status"></label>
         <select asp-for="Status" class="form-control" asp-items="Html.GetEnumSelectList<TodoTaskStatus>()">
         </select>
     </div>
-
+    <div class="form-group">
+        <label asp-for="Priority"></label>
+        <select asp-for="Priority" class="form-control">
+            <option>Low</option>
+            <option selected>Medium</option>
+            <option>High</option>
+        </select>
+    </div>
     <div class="form-group">
         <label asp-for="DueDate"></label>
         <input asp-for="DueDate" type="date" class="form-control" />
     </div>
     <div class="form-group">
-        <label for="CategoryId">Category</label>
-        <select asp-for="CategoryId" asp-items="@(new SelectList(ViewBag.Categories, "Id", "Name"))" class="form-control"></select>
+        <label asp-for="CategoryId">Category</label>
+        @Html.DropDownListFor(
+                 model => model.CategoryId,
+                 new SelectList(ViewBag.Categories, "Id", "Name"),
+                 "-- Select Category --",
+                 new { @class = "form-control" })
+        <span asp-validation-for="CategoryId" class="text-danger"></span>
     </div>
-
     <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Cancel</a>
 </form>
 
 @section Scripts {
