@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace KanbanBoard.Web.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialCreateWithSeeding : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -32,12 +32,12 @@ namespace KanbanBoard.Web.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Title = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     Status = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DueDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    Priority = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Priority = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: "Medium"),
                     CategoryId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -48,7 +48,7 @@ namespace KanbanBoard.Web.Migrations
                         column: x => x.CategoryId,
                         principalTable: "Categories",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.InsertData(
@@ -58,7 +58,9 @@ namespace KanbanBoard.Web.Migrations
                 {
                     { 1, "Work" },
                     { 2, "Personal" },
-                    { 3, "Shopping" }
+                    { 3, "Shopping" },
+                    { 4, "Health" },
+                    { 5, "Learning" }
                 });
 
             migrationBuilder.InsertData(
@@ -66,15 +68,23 @@ namespace KanbanBoard.Web.Migrations
                 columns: new[] { "Id", "CategoryId", "CreatedAt", "Description", "DueDate", "Priority", "Status", "Title" },
                 values: new object[,]
                 {
-                    { 1, 1, new DateTime(2025, 8, 19, 4, 56, 11, 167, DateTimeKind.Utc).AddTicks(7727), null, null, "Medium", 0, "Build Kanban Board" },
-                    { 2, 3, new DateTime(2025, 8, 19, 4, 56, 11, 167, DateTimeKind.Utc).AddTicks(7729), null, null, "Medium", 1, "Buy Groceries" },
-                    { 3, 2, new DateTime(2025, 8, 19, 4, 56, 11, 167, DateTimeKind.Utc).AddTicks(7730), null, null, "Medium", 2, "Call Mom" }
+                    { 1, 5, new DateTime(2025, 8, 15, 10, 0, 0, 0, DateTimeKind.Utc), "Create a fully functional kanban board with drag & drop", new DateTime(2025, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "High", 1, "Build Kanban Board" },
+                    { 2, 3, new DateTime(2025, 8, 20, 14, 30, 0, 0, DateTimeKind.Utc), "Milk, eggs, bread, vegetables, fruits", new DateTime(2025, 8, 21, 0, 0, 0, 0, DateTimeKind.Unspecified), "Medium", 0, "Buy Groceries" },
+                    { 3, 2, new DateTime(2025, 8, 18, 16, 0, 0, 0, DateTimeKind.Utc), "Weekly check-in call with family", new DateTime(2025, 8, 19, 0, 0, 0, 0, DateTimeKind.Unspecified), "High", 2, "Call Mom" },
+                    { 4, 1, new DateTime(2025, 8, 20, 9, 0, 0, 0, DateTimeKind.Utc), "Compile sales data and performance metrics", new DateTime(2025, 8, 30, 0, 0, 0, 0, DateTimeKind.Unspecified), "High", 0, "Prepare Quarterly Report" },
+                    { 5, 4, new DateTime(2025, 8, 20, 18, 0, 0, 0, DateTimeKind.Utc), "Cardio and strength training session", new DateTime(2025, 8, 21, 0, 0, 0, 0, DateTimeKind.Unspecified), "Medium", 1, "Gym Workout" },
+                    { 6, 5, new DateTime(2025, 8, 15, 11, 0, 0, 0, DateTimeKind.Utc), "Study EF Core relationships and migrations", new DateTime(2025, 8, 18, 0, 0, 0, 0, DateTimeKind.Unspecified), "High", 2, "Learn Entity Framework" }
                 });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tasks_CategoryId",
                 table: "Tasks",
                 column: "CategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tasks_Status",
+                table: "Tasks",
+                column: "Status");
         }
 
         /// <inheritdoc />

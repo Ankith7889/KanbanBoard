@@ -1,31 +1,393 @@
 ﻿@model IEnumerable<KanbanBoard.Web.Models.TodoTask>
+@using KanbanBoard.Web.Models;
+@{
+    ViewData["Title"] = "Kanban Board";
+}
 
-<h2>Tasks</h2>
+<style>
+    .Kanban-board {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 20px;
+        margin: 20px;
+        min-height: 600px;
+    }
+    .Kanban-Column {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Title</th>
-            <th>Status</th>
-            <th>Priority</th>
-            <th>Due Date</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var t in Model)
-        {
-            <tr>
-                <td>@t.Title</td>
-                <td>@t.Status</td>
-                <td>@t.Priority</td>
-                <td>@(t.DueDate?.ToString("yyyy-MM-dd") ?? "-")</td>
-                <td>
-                    <a asp-controller="Task" asp-action="Edit" asp-route-id="@t.Id" class="btn btn-primary">Edit</a>
-                    <a asp-controller="Task" asp-action="Delete" asp-route-id="@t.Id" class="btn btn-danger">Delete</a>
-            </tr>
+    .kanban-header {
+        text-align: center;
+        margin-bottom: 15px;
+        padding: 10px;
+        border-radius: 5px;
+        font-weight: bold;
+        color: white;
+    }
+
+    /* Different colors for each status */
+    .todo-header {
+        background-color: #6c757d;
+    }
+    /* Gray */
+    .inprogress-header {
+        background-color: #ffc107;
+    }
+    /* Yellow */
+    .done-header {
+        background-color: #28a745;
+    }
+    /* Green */
+
+    .task-card {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 12px;
+        margin-bottom: 10px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s; /* Smooth hover effect */
+    }
+
+        .task-card:hover {
+            transform: translateY(-2px); /* Lift effect on hover */
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
         }
-    </tbody>
-</table>
-<p>
-    <a asp-controller="Task" asp-action="Create" class="btn btn-success">Create New Task</a>
-</p>
+
+    .task-title {
+        font-weight: 600;
+        font-size: 1.1em;
+        margin-bottom: 8px;
+        color: #2c3e50;
+    }
+
+    .task-description {
+        color: #6c757d;
+        font-size: 0.9em;
+        margin-bottom: 10px;
+        line-height: 1.4;
+    }
+
+    .task-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.8em;
+        color: #868e96;
+    }
+
+    .task-category {
+        background-color: #e9ecef;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.75em;
+    }
+
+    .task-priority {
+        font-weight: 500;
+    }
+
+    .priority-high {
+        color: #dc3545;
+    }
+
+    .priority-medium {
+        color: #ffc107;
+    }
+
+    .priority-low {
+        color: #28a745;
+    }
+
+    .task-actions {
+        margin-top: 10px;
+        display: flex;
+        gap: 5px;
+    }
+
+    .btn-sm {
+        font-size: 0.75em;
+        padding: 4px 8px;
+    }
+
+    .empty-column {
+        text-align: center;
+        color: #adb5bd;
+        font-style: italic;
+        padding: 40px 20px;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="display-4">📋Kanban Board</h1>
+    <a asp-controller="Task" asp-action="Create" class="btn btn-success btn-lg">
+        <i class="fas fa-plus"></i> Add New Task
+    </a>
+</div>
+
+<!-- LEARNING POINT 3: Summary Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-secondary text-white text-center">
+            <div class="card-body">
+                <h4>@Model.Count(t => t.Status == TodoTaskStatus.ToDo)</h4>
+                <p class="card-text">To Do</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark text-center">
+            <div class="card-body">
+                <h4>@Model.Count(t => t.Status == TodoTaskStatus.InProgress)</h4>
+                <p class="card-text">In Progress</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white text-center">
+            <div class="card-body">
+                <h4>@Model.Count(t => t.Status == TodoTaskStatus.Done)</h4>
+                <p class="card-text">Done</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white text-center">
+            <div class="card-body">
+                <h4>@Model.Count()</h4>
+                <p class="card-text">Total Tasks</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- LEARNING POINT 4: The Kanban Board Layout -->
+<div class="kanban-board">
+
+    <!-- TO DO COLUMN -->
+    <div class="kanban-column">
+        <div class="kanban-header todo-header">
+            📝 TO DO (@Model.Count(t => t.Status == TodoTaskStatus.ToDo))
+        </div>
+
+        @{
+            // LEARNING POINT 5: LINQ Filtering
+            // Filter tasks to show only ToDo status
+            var todoTasks = Model.Where(t => t.Status == TodoTaskStatus.ToDo);
+        }
+
+        @if (todoTasks.Any())
+        {
+            // LEARNING POINT 6: Foreach Loop in Razor
+            @foreach (var task in todoTasks)
+            {
+                <!-- LEARNING POINT 7: Partial View for Task Card -->
+                <div class="task-card">
+                    <div class="task-title">@task.Title</div>
+
+                    @if (!string.IsNullOrEmpty(task.Description))
+                    {
+                        <div class="task-description">
+                            @(task.Description.Length > 80
+                                            ? task.Description.Substring(0, 80) + "..."
+                                            : task.Description)
+            </div>
+                        }
+
+                    <div class="task-meta">
+                        <span class="task-category">@(task.Category?.Name ?? "No Category")</span>
+                        <span class="task-priority priority-@task.Priority.ToLower()">
+                            @task.Priority Priority
+                        </span>
+                    </div>
+
+                    @if (task.DueDate.HasValue)
+                    {
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                📅 Due: @task.DueDate.Value.ToString("MMM dd")
+                                @if (task.DueDate.Value.Date < DateTime.Now.Date)
+                                {
+                                    <span class="text-danger font-weight-bold">⚠️ OVERDUE</span>
+                                }
+                                else if (task.DueDate.Value.Date == DateTime.Now.Date)
+                                {
+                                    <span class="text-warning font-weight-bold">📢 TODAY</span>
+                                }
+                            </small>
+                        </div>
+                    }
+
+                    <div class="task-actions">
+                        <a asp-controller="Task" asp-action="Edit" asp-route-id="@task.Id"
+                           class="btn btn-primary btn-sm">✏️ Edit</a>
+                        <a asp-controller="Task" asp-action="Delete" asp-route-id="@task.Id"
+                           class="btn btn-danger btn-sm">🗑️ Delete</a>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-column">
+                <p>No tasks to do! 🎉</p>
+                <p>Take a break or add a new task.</p>
+            </div>
+        }
+    </div>
+
+    <!-- IN PROGRESS COLUMN -->
+    <div class="kanban-column">
+        <div class="kanban-header inprogress-header">
+            ⚡ IN PROGRESS (@Model.Count(t => t.Status == TodoTaskStatus.InProgress))
+        </div>
+
+        @{
+            var inProgressTasks = Model.Where(t => t.Status == TodoTaskStatus.InProgress);
+        }
+
+        @if (inProgressTasks.Any())
+        {
+            @foreach (var task in inProgressTasks)
+            {
+                <div class="task-card">
+                    <div class="task-title">@task.Title</div>
+
+                    @if (!string.IsNullOrEmpty(task.Description))
+                    {
+                        <div class="task-description">
+                            @(task.Description.Length > 80
+                                            ? task.Description.Substring(0, 80) + "..."
+                                            : task.Description)
+            </div>
+                        }
+
+                    <div class="task-meta">
+                        <span class="task-category">@(task.Category?.Name ?? "No Category")</span>
+                        <span class="task-priority priority-@task.Priority.ToLower()">
+                            @task.Priority Priority
+                        </span>
+                    </div>
+
+                    @if (task.DueDate.HasValue)
+                    {
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                📅 Due: @task.DueDate.Value.ToString("MMM dd")
+                                @if (task.DueDate.Value.Date < DateTime.Now.Date)
+                                {
+                                    <span class="text-danger font-weight-bold">⚠️ OVERDUE</span>
+                                }
+                                else if (task.DueDate.Value.Date == DateTime.Now.Date)
+                                {
+                                    <span class="text-warning font-weight-bold">📢 TODAY</span>
+                                }
+                            </small>
+                        </div>
+                    }
+
+                    <div class="task-actions">
+                        <a asp-controller="Task" asp-action="Edit" asp-route-id="@task.Id"
+                           class="btn btn-primary btn-sm">✏️ Edit</a>
+                        <a asp-controller="Task" asp-action="Delete" asp-route-id="@task.Id"
+                           class="btn btn-danger btn-sm">🗑️ Delete</a>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-column">
+                <p>Nothing in progress 📭</p>
+                <p>Move some tasks here to start working!</p>
+            </div>
+        }
+    </div>
+
+    <!-- DONE COLUMN -->
+    <div class="kanban-column">
+        <div class="kanban-header done-header">
+            ✅ DONE (@Model.Count(t => t.Status == TodoTaskStatus.Done))
+        </div>
+
+        @{
+            var doneTasks = Model.Where(t => t.Status == TodoTaskStatus.Done);
+        }
+
+        @if (doneTasks.Any())
+        {
+            @foreach (var task in doneTasks)
+            {
+                <div class="task-card">
+                    <div class="task-title">@task.Title</div>
+
+                    @if (!string.IsNullOrEmpty(task.Description))
+                    {
+                        <div class="task-description">
+                            @(task.Description.Length > 80
+                                            ? task.Description.Substring(0, 80) + "..."
+                                            : task.Description)
+            </div>
+                        }
+
+                    <div class="task-meta">
+                        <span class="task-category">@(task.Category?.Name ?? "No Category")</span>
+                        <span class="task-priority priority-@task.Priority.ToLower()">
+                            @task.Priority Priority
+                        </span>
+                    </div>
+
+                    <div class="mt-2">
+                        <small class="text-success">
+                            ✅ Completed: @task.CreatedAt.ToString("MMM dd")
+                        </small>
+                    </div>
+
+                    <div class="task-actions">
+                        <a asp-controller="Task" asp-action="Edit" asp-route-id="@task.Id"
+                           class="btn btn-primary btn-sm">✏️ Edit</a>
+                        <a asp-controller="Task" asp-action="Delete" asp-route-id="@task.Id"
+                           class="btn btn-danger btn-sm">🗑️ Delete</a>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-column">
+                <p>No completed tasks yet 📋</p>
+                <p>Complete some tasks to see them here!</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- LEARNING POINT 8: Statistics at the Bottom -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5 class="card-title">📊 Productivity Stats</h5>
+                <p class="card-text">
+                    You have <strong>@Model.Count()</strong> total tasks.
+                    <strong>@Model.Count(t => t.Status == TodoTaskStatus.Done)</strong> completed
+                    (@(Model.Any() ? Math.Round((double)Model.Count(t => t.Status == TodoTaskStatus.Done) / Model.Count() * 100, 1) : 0)% completion rate).
+                    @{
+                        var overdueTasks = Model.Count(t => t.DueDate.HasValue && t.DueDate.Value.Date < DateTime.Now.Date && t.Status != TodoTaskStatus.Done);
+                    }
+                    @if (overdueTasks > 0)
+                    {
+                        <span class="text-danger">⚠️ <strong>@overdueTasks</strong> tasks are overdue!</span>
+                    }
+                    else
+                    {
+                        <span class="text-success">🎉 No overdue tasks!</span>
+                    }
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
